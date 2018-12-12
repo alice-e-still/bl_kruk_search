@@ -1,13 +1,13 @@
 <?php
 /**
  * @package bl_kruk_conditions_symptoms_search
- * @version 1.0.0.0
+ * @version 1.0.0.1
  */
 
 /*
 Plugin Name: BoldLight KRUK Conditions and Symptoms Search
-Version: 1.0.0.0
-Description: Plugin to provide conditions and symptoms search functionality. [conditions_and_symptoms_search]
+Version: 1.0.0.1
+Description: Plugin to provide conditions and symptoms search functionality. [conditions_and_symptoms_search placeholder_text=""]
 Author: BoldLight
 */
 
@@ -27,6 +27,11 @@ add_shortcode('conditions_and_symptoms_search','display_conditions_and_symptoms_
 
 function display_conditions_and_symptoms_search($atts){
 	
+	$placeholder_text = '...';
+	if(isset($atts['placeholder_text'])){
+		$placeholder_text = $atts['placeholder_text'];
+	}
+	
 	if(isset($atts['post_type'])){
 		$post_type = $atts['post_type'];
 	}else{
@@ -38,17 +43,17 @@ function display_conditions_and_symptoms_search($atts){
 	
 	ob_start();
 ?>
-<div id="conditions-symptoms-search" style="margin-bottom:10px;">
-	<div class="ui-widget">
-		<form autocomplete="nope">
-			<label for="conditions-symptoms">Search: </label><input id="conditions-symptoms" type="text" style="width:20em; display:inline; margin-left:5px;" autocomplete="nope"/> <button id="conditions-symptoms-find">find</button>
-		</form>
+<div id="conditions-symptoms-search" class="boldlight-custom-search">
+	<form autocomplete="nope">
+	<div class="ui-widget input-group mb-3">
+			<input id="conditions-symptoms" type="text" class="form-control" autocomplete="nope" placeholder="<?php echo $placeholder_text ;?>" aria-label="" aria-describedby="conditions-symptoms-find"/>
+			
 	</div>
+	</form>
 </div>
 <?php
 		
 	$available_titles = "";
-	
 	
 	
 	$query_params = array( 'post_type'=>$post_type,'posts_per_page'=>-1, 'order'=>'ASC'); // return all posts - no paging
@@ -61,21 +66,21 @@ function display_conditions_and_symptoms_search($atts){
 			$conditions_symptoms_query->the_post();
 			//-- $post magically is set at this point in The Loop! --//
 		
-			//$session_slug = $post->post_name;
 			$session_name = $post->post_title;
-			$session_name_lwr = strtolower($post->post_title);
+			
+			//$session_name_lwr = strtolower($post->post_title);
 			
 			$session_permalink = get_permalink();
 			
-			$available_titles .= ' "'.$session_name.'", ';
-			echo '<div class="search-result" data-title="'.$session_name_lwr.'"><a href="'.$session_permalink.'">'.$session_name.'</a></div>';
+			$available_titles .= ' { dest: "'.$session_permalink.'", label:"'.$session_name.'"}, ';
+			//echo '<div class="search-result" data-title="'.$session_name_lwr.'"><a href="'.$session_permalink.'">'.$session_name.'</a></div>';
 		}	
 	
 ?>
 <script>
 	$( function() {
 	
-	$(".search-result").hide();
+	//$(".search-result").hide();
 
     var availableTags = [
       <?php echo $available_titles; ?>
@@ -84,31 +89,18 @@ function display_conditions_and_symptoms_search($atts){
     $( "#conditions-symptoms" ).autocomplete({
       source: availableTags,
       minLength: 3,
+      select: function( event, ui ) { 
+            window.location.href = ui.item.dest;
+        }
     });
     
-    $("#conditions-symptoms").change(function(){
-    	console.log($(this).val());
-    });
-    
-  
-	/*
-	$('#conditions-symptoms').keydown(function (e) {
-		var key = e.which;
-		if(key == 13){
-		console.log('find');
-		//$(this).blur(); 
-		//$("#conditions-symptoms-find").click();
-		//
-		}
-		//else{ $(this).focus(); }
-	});  
-	*/
-  
   	$("#conditions-symptoms-find").click(function(event){
   		
   		$('#conditions-symptoms').blur();
   		event.preventDefault(); // do not submit form
-  		$(".search-result").hide();
+  		
+  		//-- button likely to be removed --//
+  		/*$(".search-result").hide();
   		
   		search_name = $("#conditions-symptoms").val().toLowerCase();
   		
@@ -117,8 +109,7 @@ function display_conditions_and_symptoms_search($atts){
   		if(result_sets){
   			result_sets.show();
   		}
-  		//console.log($(".search-result"));
-  		//return false; 
+  		*/
   		$('#conditions-symptoms').focus(); 
   	});
   } );
